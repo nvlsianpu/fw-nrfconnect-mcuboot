@@ -194,6 +194,13 @@ boot_uart_fifo_init(void)
 	uart_dev = device_get_binding(CONFIG_RECOVERY_UART_DEV_NAME);
 #elif CONFIG_BOOT_SERIAL_CDC_ACM
 	uart_dev = device_get_binding(CONFIG_USB_CDC_ACM_DEVICE_NAME "_0");
+	if (uart_dev) {
+		int rc;
+		rc = usb_enable(NULL);
+		if (rc) {
+			return (-1);
+		}
+	}
 #endif
 	u8_t c;
 
