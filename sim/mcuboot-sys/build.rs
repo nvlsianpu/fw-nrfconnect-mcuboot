@@ -143,6 +143,9 @@ fn main() {
 
     if swap_move {
         conf.define("MCUBOOT_SWAP_USING_MOVE", None);
+    } else {
+        conf.define("CONFIG_BOOT_SWAP_USING_SCRATCH", None);
+        conf.define("MCUBOOT_SWAP_USING_SCRATCH", None);
     }
 
     if enc_rsa {
@@ -352,3 +355,4 @@ fn walk_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
 
     Ok(())
 }
+
