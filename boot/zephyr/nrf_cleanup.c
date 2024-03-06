@@ -47,7 +47,7 @@ static void nrf_cleanup_clock(void)
     nrf_clock_int_disable(NRF_CLOCK, 0xFFFFFFFF);
 }
 
-#if defined(NRF_UARTE0) || defined(NRF_UARTE1)
+#if (defined(NRF_UARTE0) || defined(NRF_UARTE1)) && defined(CONFIG_UART_NRFX_UARTE)
 static void uninit_used_uarte(NRF_UARTE_Type *p_reg)
 {
     uint32_t pin[4];
@@ -85,10 +85,10 @@ void nrf_cleanup_peripheral(void)
 #if defined(NRF_RTC2)
     nrf_cleanup_rtc(NRF_RTC2);
 #endif
-#if defined(NRF_UARTE0)
+#if defined(NRF_UARTE0)) && defined(CONFIG_UART_NRFX_UARTE)
     uninit_used_uarte(NRF_UARTE0);
 #endif
-#if defined(NRF_UARTE1)
+#if defined(NRF_UARTE1)) && defined(CONFIG_UART_NRFX_UARTE)
     uninit_used_uarte(NRF_UARTE1);
 #endif
 #if defined(NRF_PPI)
