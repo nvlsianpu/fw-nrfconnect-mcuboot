@@ -1270,7 +1270,7 @@ static inline void sec_slot_cleanup_if_unusable(void)
 }
 #endif /* defined(CONFIG_MCUBOOT_CLEANUP_UNUSABLE_SECONDARY) &&\
           defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP) */
-
+bool flag_is_nsib = false;
 /**
  * Determines which swap operation to perform, if any.  If it is determined
  * that a swap operation is required, the image in the secondary slot is checked
@@ -1286,6 +1286,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
     int swap_type;
     FIH_DECLARE(fih_rc, FIH_FAILURE);
     bool upgrade_valid = false;
+    flag_is_nsib = false;
 
 #if defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP)
     const struct flash_area *secondary_fa =
@@ -1342,6 +1343,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
                         && reset_addr < (nsib_fa->fa_off + nsib_fa->fa_size)) {
                         /* Set primary to be NSIB upgrade slot */
                         BOOT_IMG_AREA(state, 0) = nsib_fa;
+                        flag_is_nsib = true;
                     }
 #else
                 return BOOT_SWAP_TYPE_NONE;
@@ -1351,6 +1353,10 @@ boot_validated_swap_type(struct boot_loader_state *state,
             } else if (reset_addr > (primary_fa->fa_off + primary_fa->fa_size)) {
                 /* The image in the secondary slot is not intended for any */
                 return BOOT_SWAP_TYPE_NONE;
+            }
+
+            if (primary_fa->fa_off == PM_S1_ADDRESS) {
+                flag_is_nsib = true;
             }
         }
 #endif /* PM_S1_ADDRESS */
@@ -2309,8 +2315,12 @@ check_downgrade_prevention(struct boot_loader_state *state)
         }
     }
     else {
-        rc = boot_version_cmp(&boot_img_hdr(state, BOOT_SECONDARY_SLOT)->ih_ver,
-                              &boot_img_hdr(state, BOOT_PRIMARY_SLOT)->ih_ver);
+        if (flag_is_nsib)
+            rc = 0;
+        else {
+            rc = boot_version_cmp(&boot_img_hdr(state, BOOT_SECONDARY_SLOT)->ih_ver,
+                                  &boot_img_hdr(state, BOOT_PRIMARY_SLOT)->ih_ver);
+        }
     }
     if (rc < 0) {
         /* Image in slot 0 prevents downgrade, delete image in slot 1 */
