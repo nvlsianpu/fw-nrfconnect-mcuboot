@@ -1270,7 +1270,7 @@ static inline void sec_slot_cleanup_if_unusable(void)
 }
 #endif /* defined(CONFIG_MCUBOOT_CLEANUP_UNUSABLE_SECONDARY) &&\
           defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP) */
-bool flag_is_nsib = false;
+bool owner_nsib[BOOT_IMAGE_NUMBER];
 /**
  * Determines which swap operation to perform, if any.  If it is determined
  * that a swap operation is required, the image in the secondary slot is checked
@@ -1286,7 +1286,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
     int swap_type;
     FIH_DECLARE(fih_rc, FIH_FAILURE);
     bool upgrade_valid = false;
-    flag_is_nsib = false;
+    owner_nsib[BOOT_CURR_IMG(state)] = false;
 
 #if defined(PM_S1_ADDRESS) || defined(CONFIG_SOC_NRF5340_CPUAPP)
     const struct flash_area *secondary_fa =
@@ -1356,7 +1356,7 @@ boot_validated_swap_type(struct boot_loader_state *state,
             }
 
             if (primary_fa->fa_off == PM_S1_ADDRESS) {
-                flag_is_nsib = true;
+                owner_nsib[BOOT_CURR_IMG(state)] = true;
             }
         }
 #endif /* PM_S1_ADDRESS */
@@ -2297,6 +2297,10 @@ check_downgrade_prevention(struct boot_loader_state *state)
     uint32_t security_counter[2];
     int rc;
 
+    if (owner_nsib[BOOT_CURR_IMG(state)]) {
+        return 0;
+    }
+
     if (MCUBOOT_DOWNGRADE_PREVENTION_SECURITY_COUNTER) {
         /* If there was security no counter in slot 0, allow swap */
         rc = bootutil_get_img_security_cnt(&(BOOT_IMG(state, 0).hdr),
@@ -2315,12 +2319,8 @@ check_downgrade_prevention(struct boot_loader_state *state)
         }
     }
     else {
-        if (flag_is_nsib)
-            rc = 0;
-        else {
-            rc = boot_version_cmp(&boot_img_hdr(state, BOOT_SECONDARY_SLOT)->ih_ver,
-                                  &boot_img_hdr(state, BOOT_PRIMARY_SLOT)->ih_ver);
-        }
+        rc = boot_version_cmp(&boot_img_hdr(state, BOOT_SECONDARY_SLOT)->ih_ver,
+                              &boot_img_hdr(state, BOOT_PRIMARY_SLOT)->ih_ver);
     }
     if (rc < 0) {
         /* Image in slot 0 prevents downgrade, delete image in slot 1 */
