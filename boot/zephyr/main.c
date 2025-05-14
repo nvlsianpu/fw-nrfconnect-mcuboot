@@ -147,7 +147,7 @@ struct arm_vector_table {
 
 static void do_boot(struct boot_rsp *rsp)
 {
-    struct arm_vector_table *vt;
+    static struct arm_vector_table *vt;
 
     /* The beginning of the image is the ARM vector table, containing
      * the initial stack pointer address and the reset vector
