@@ -510,6 +510,7 @@ if(CONFIG_BOOT_ENCRYPTION_KEY_FILE AND NOT CONFIG_BOOT_ENCRYPTION_KEY_FILE STREQ
     ${PYTHON_EXECUTABLE}
     ${MCUBOOT_DIR}/scripts/imgtool.py
     getpriv
+    --minimal
     -k
     ${KEY_FILE}
     > ${GENERATED_ENCKEY}

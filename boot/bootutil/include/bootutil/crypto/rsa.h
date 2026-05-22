@@ -229,6 +229,20 @@ bootutil_rsa_parse_private_key(bootutil_rsa_context *ctx, uint8_t **p, uint8_t *
         return -2;
     }
 
+    /*
+     * RSAPrivateKey may include a version field (RFC 3447 A.1.2). imgtool
+     * getpriv emits it by default; --minimal omits CRT params but keeps it.
+     * Keys with only N, E, D, P, Q are also accepted (no version field).
+     */
+    {
+        int version = 0;
+        uint8_t *p0 = *p;
+
+        if (mbedtls_asn1_get_int(p, end, &version) != 0 || version != 0) {
+            *p = p0;
+        }
+    }
+
     /* Non-optional fields. */
     if ( /* public modulus */
         mbedtls_asn1_get_mpi(p, end, &ctx->MBEDTLS_CONTEXT_MEMBER(N)) != 0 ||
